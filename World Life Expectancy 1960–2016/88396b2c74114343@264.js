@@ -21,6 +21,45 @@ function _chart(d3,projection,color,width,DOM,height,location,year,topojson,worl
   const path = d3.geoPath();
   const ticks = [30, 40, 50, 60, 70, 80, 90];
 
+  const countries = topojson.feature(world, world.objects.countries).features;
+  const countryValues = countries
+    .map(feature => {
+      const entry = life.get(feature.id);
+      if (!entry || !entry[year]) return null;
+      return { feature, value: +entry[year], name: entry["Country Name"] };
+    })
+    .filter(Boolean);
+
+  const topThree = countryValues
+    .slice()
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 3);
+
+  const bottomThree = countryValues
+    .slice()
+    .sort((a, b) => a.value - b.value)
+    .slice(0, 3);
+
+  const annotate = (selection, data, textColor) => {
+    const labelGroup = selection.append("g").attr("class", "labels");
+
+    labelGroup
+      .selectAll("text")
+      .data(data)
+      .enter()
+      .append("text")
+      .attr("transform", d => `translate(${path.centroid(d.feature)})`)
+      .attr("dy", "-0.35em")
+      .attr("text-anchor", "middle")
+      .attr("fill", textColor)
+      .attr("font-size", 12)
+      .attr("font-weight", "bold")
+      .attr("stroke", "white")
+      .attr("stroke-width", 3)
+      .attr("paint-order", "stroke")
+      .text(d => `${d.name} ${Math.round(d.value)}`);
+  };
+
   path.projection(projection);
 
   const x = d3
@@ -81,7 +120,7 @@ function _chart(d3,projection,color,width,DOM,height,location,year,topojson,worl
   svg
     .append("g")
     .selectAll("path")
-    .data(topojson.feature(world, world.objects.countries).features)
+    .data(countries)
     .enter()
     .append("path")
     .attr("fill", d =>
@@ -104,6 +143,9 @@ function _chart(d3,projection,color,width,DOM,height,location,year,topojson,worl
     .attr("stroke", "white")
     .attr("stroke-linejoin", "round")
     .attr("d", path);
+
+  annotate(svg, topThree, "#006400");
+  annotate(svg, bottomThree, "#8b0000");
 
   return svg.node();
 }
