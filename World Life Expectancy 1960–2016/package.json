@@ -1,0 +1,14 @@
+{
+  "name": "88396b2c74114343",
+  "main": "88396b2c74114343@264.js",
+  "version": "264.0.0",
+  "homepage": "https://observablehq.com/d/88396b2c74114343",
+  "author": {
+    "name": "Creative",
+    "url": "https://observablehq.com/@creative5"
+  },
+  "type": "module",
+  "peerDependencies": {
+    "@observablehq/runtime": "4 - 5"
+  }
+}
