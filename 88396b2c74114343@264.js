@@ -105,6 +105,56 @@ function _chart(d3,projection,color,width,DOM,height,location,year,topojson,worl
     .attr("stroke-linejoin", "round")
     .attr("d", path);
 
+  const countryShapes = topojson
+    .feature(world, world.objects.countries)
+    .features.map(feature => ({
+      feature,
+      record: life.get(feature.id),
+      value: life.has(feature.id) && life.get(feature.id)[year]
+        ? +life.get(feature.id)[year]
+        : undefined
+    }))
+    .filter(d => d.value != null && !isNaN(d.value));
+
+  const topCountries = countryShapes
+    .slice()
+    .sort((a, b) => d3.descending(a.value, b.value))
+    .slice(0, 3);
+
+  const bottomCountries = countryShapes
+    .slice()
+    .sort((a, b) => d3.ascending(a.value, b.value))
+    .slice(0, 3);
+
+  const labelGroup = svg
+    .append("g")
+    .attr("class", "extrema-labels")
+    .attr("font-weight", "bold")
+    .attr("font-size", 12)
+    .attr("stroke", "white")
+    .attr("stroke-width", 3)
+    .attr("stroke-linejoin", "round")
+    .attr("paint-order", "stroke");
+
+  function drawLabels(countries, fill) {
+    const labels = labelGroup
+      .selectAll(`.label-${fill.replace("#", "")}`)
+      .data(countries)
+      .enter()
+      .append("text")
+      .attr("fill", fill)
+      .attr("text-anchor", "middle")
+      .text(d => `${d.record["Country Name"]}: ${Math.round(d.value)}`);
+
+    labels.attr("transform", d => {
+      const [x, y] = path.centroid(d.feature);
+      return `translate(${x},${y})`;
+    });
+  }
+
+  drawLabels(topCountries, "#b30000");
+  drawLabels(bottomCountries, "#08519c");
+
   return svg.node();
 }
 
