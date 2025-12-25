@@ -2,6 +2,13 @@
 
 https://observablehq.com/d/88396b2c74114343@264
 
+## GitHub Pages
+
+This repo is configured to publish the static files in the root directory to
+GitHub Pages using the included GitHub Actions workflow. When changes are
+pushed to the `main` branch, the site will automatically build and deploy to
+the `github-pages` environment.
+
 View this notebook in your browser by running a web server in this folder. For
 example:
 
