@@ -130,11 +130,17 @@ function _chart(d3,projection,color,width,DOM,height,location,year,topojson,worl
     .append("g")
     .attr("class", "extrema-labels")
     .attr("font-weight", "bold")
-    .attr("font-size", 12)
+    .attr("font-size", 16)
     .attr("stroke", "white")
-    .attr("stroke-width", 3)
+    .attr("stroke-width", 4)
     .attr("stroke-linejoin", "round")
     .attr("paint-order", "stroke");
+
+  const ageIcon = value => {
+    if (value >= 80) return "🩼"; // elder
+    if (value >= 70) return "🧑"; // middle-aged
+    return "🍼"; // younger
+  };
 
   function drawLabels(countries, fill) {
     const labels = labelGroup
@@ -144,7 +150,9 @@ function _chart(d3,projection,color,width,DOM,height,location,year,topojson,worl
       .append("text")
       .attr("fill", fill)
       .attr("text-anchor", "middle")
-      .text(d => `${d.record["Country Name"]}: ${Math.round(d.value)}`);
+      .text(d =>
+        `${ageIcon(d.value)} ${d.record["Country Name"]}: ${Math.round(d.value)}`
+      );
 
     labels.attr("transform", d => {
       const [x, y] = path.centroid(d.feature);
