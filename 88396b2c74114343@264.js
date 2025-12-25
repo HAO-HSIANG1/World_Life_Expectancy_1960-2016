@@ -21,6 +21,8 @@ function _chart(d3,projection,color,width,DOM,height,location,year,topojson,worl
   const path = d3.geoPath();
   const ticks = [30, 40, 50, 60, 70, 80, 90];
 
+  const countries = topojson.feature(world, world.objects.countries).features;
+
   path.projection(projection);
 
   const x = d3
@@ -81,7 +83,7 @@ function _chart(d3,projection,color,width,DOM,height,location,year,topojson,worl
   svg
     .append("g")
     .selectAll("path")
-    .data(topojson.feature(world, world.objects.countries).features)
+    .data(countries)
     .enter()
     .append("path")
     .attr("fill", d =>
@@ -104,6 +106,58 @@ function _chart(d3,projection,color,width,DOM,height,location,year,topojson,worl
     .attr("stroke", "white")
     .attr("stroke-linejoin", "round")
     .attr("d", path);
+
+  const rankedCountries = countries
+    .map(feature => {
+      const record = life.get(feature.id);
+      return {
+        feature,
+        value: record ? +record[year] : NaN,
+        name: record ? record["Country Name"] : null
+      };
+    })
+    .filter(d => Number.isFinite(d.value));
+
+  const byHighest = rankedCountries
+    .slice()
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 3)
+    .map(d => ({ ...d, category: "high" }));
+
+  const byLowest = rankedCountries
+    .slice()
+    .sort((a, b) => a.value - b.value)
+    .slice(0, 3)
+    .map(d => ({ ...d, category: "low" }));
+
+  const uniqueHighlights = [];
+  const seen = new Set();
+
+  for (const item of [...byHighest, ...byLowest]) {
+    if (!seen.has(item.feature.id)) {
+      seen.add(item.feature.id);
+      uniqueHighlights.push(item);
+    }
+  }
+
+  const labels = svg.append("g");
+
+  labels
+    .selectAll("text")
+    .data(uniqueHighlights)
+    .enter()
+    .append("text")
+    .attr("x", d => path.centroid(d.feature)[0])
+    .attr("y", d => path.centroid(d.feature)[1])
+    .attr("dy", "0.35em")
+    .attr("text-anchor", "middle")
+    .attr("fill", d => (d.category === "high" ? "#0b7285" : "#d9480f"))
+    .attr("stroke", "white")
+    .attr("stroke-width", 3)
+    .attr("paint-order", "stroke")
+    .style("font-weight", "bold")
+    .style("font-size", 11)
+    .text(d => `${d.name} ${Math.round(d.value)}`);
 
   return svg.node();
 }
